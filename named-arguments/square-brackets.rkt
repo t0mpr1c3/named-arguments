@@ -41,7 +41,9 @@
 
 (define-syntax-parser lambda
   [(lambda (arg:arg-spec ...) body:expr ...)
-   #'(old-lambda (arg.norm ... ...) body ...)])
+   #'(old-lambda (arg.norm ... ...) body ...)]
+  [(lambda (arg:arg-spec ... . rst:id) body:expr ...)
+   #'(old-lambda (arg.norm ... ... . rst) body ...)])
 
 (define-syntax-parser #%app
   [(app fn arg:arg ...)
@@ -52,7 +54,6 @@
 (module+ test
   ;; using the new define
   (define (greet4 [hi "hello"]  [given "Joe"]  [surname "Smith"])
-    ;; have to use old-#%app for this string-append call
     (string-append hi ", " given " " surname))
 
   ;; these impliticly use the new #%app macro defined above
@@ -65,4 +66,19 @@
   (define symbol-greeting (compose string->symbol greet4))
   (check-equal? (symbol-greeting [hi "hey"] [given "Robert"])
                 '|hey, Robert Smith|)
+
+  ;; with rest arguments
+  (define (greet5 [hi "hello"]  [given "Joe"]  [surname "Smith"] . middles)
+    (string-append hi ", " given " " (string-join middles) " " surname))
+
+  (check-equal? (greet5 "'da Grass'") "hello, Joe 'da Grass' Smith")
+  (check-equal? (greet5 [given "Robert"] "P." "Wulfric") "hello, Robert P. Wulfric Smith")
+
+  (define (list-greet5 . middles)
+    (map greet5 middles))
+
+  (check-equal? (list-greet5 "Brian" "'da Tree'" "M.")
+                (list "hello, Joe Brian Smith"
+                      "hello, Joe 'da Tree' Smith"
+                      "hello, Joe M. Smith"))
   )
