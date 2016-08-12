@@ -37,7 +37,7 @@
   [(define x:id val:expr)
    #'(old-define x val)]
   [(define (fn . args) body:expr ...+)
-   #'(old-define fn (lambda args body ...))])
+   #'(define fn (lambda args body ...))])
 
 (define-syntax-parser lambda
   [(lambda (arg:arg-spec ...) body:expr ...)
@@ -81,4 +81,13 @@
                 (list "hello, Joe Brian Smith"
                       "hello, Joe 'da Tree' Smith"
                       "hello, Joe M. Smith"))
+
+  ;; curried function syntax
+  (define ((greet6 [hi "hello"]) name)
+    (string-append hi ", " name))
+
+  (check-equal? ((greet6) "Joe") "hello, Joe")
+  (check-equal? ((greet6 [hi "hey"]) "Joe") "hey, Joe")
+  (check-equal? (map (greet6 [hi "hey"]) (list "Joe" "Maria" "Robert"))
+                (list "hey, Joe" "hey, Maria" "hey, Robert"))
   )
