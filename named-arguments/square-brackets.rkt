@@ -48,11 +48,12 @@
      #'(old-lambda (arg.norm ... ... . rst) body ...)]))
 
 (define-syntax #%app
-  (syntax-parser
-    [(app fn arg:arg ...)
-     #:fail-when (equal? #\[ (syntax-property this-syntax 'paren-shape))
-     "function applications can't use `[`"
-     #'(old-#%app fn arg.norm ... ...)]))
+  (lambda (stx)
+    (syntax-parse stx
+      [(app fn arg:arg ...)
+       #:fail-when (equal? #\[ (syntax-property stx 'paren-shape))
+       "function applications can't use `[`"
+       #'(old-#%app fn arg.norm ... ...)])))
 
 (module+ test
   ;; using the new define
