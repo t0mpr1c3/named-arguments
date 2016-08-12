@@ -5,9 +5,9 @@
 ;; A solution to this stack overflow question:
 ;; http://stackoverflow.com/q/38674439/5432501
 
-(require syntax/parse/define ; for define-simple-macro
-         (only-in racket [define old-define] [lambda old-lambda] [#%app old-#%app])
-         (for-syntax syntax/stx)) ; for stx-map
+(require (only-in racket [define old-define] [lambda old-lambda] [#%app old-#%app])
+         (for-syntax syntax/parse ; for syntax-parser
+                     syntax/stx)) ; for stx-map
 (module+ test
   (require rackunit))
 
@@ -33,23 +33,26 @@
              #:with name-kw (identifier->keyword #'name)
              #:with (norm ...) #'(name-kw arg)]))
 
-(define-syntax-parser define
-  [(define x:id val:expr)
-   #'(old-define x val)]
-  [(define (fn . args) body:expr ...+)
-   #'(define fn (lambda args body ...))])
+(define-syntax define
+  (syntax-parser
+    [(define x:id val:expr)
+     #'(old-define x val)]
+    [(define (fn . args) body:expr ...+)
+     #'(define fn (lambda args body ...))]))
 
-(define-syntax-parser lambda
-  [(lambda (arg:arg-spec ...) body:expr ...)
-   #'(old-lambda (arg.norm ... ...) body ...)]
-  [(lambda (arg:arg-spec ... . rst:id) body:expr ...)
-   #'(old-lambda (arg.norm ... ... . rst) body ...)])
+(define-syntax lambda
+  (syntax-parser
+    [(lambda (arg:arg-spec ...) body:expr ...)
+     #'(old-lambda (arg.norm ... ...) body ...)]
+    [(lambda (arg:arg-spec ... . rst:id) body:expr ...)
+     #'(old-lambda (arg.norm ... ... . rst) body ...)]))
 
-(define-syntax-parser #%app
-  [(app fn arg:arg ...)
-   #:fail-when (equal? #\[ (syntax-property this-syntax 'paren-shape))
-   "function applications can't use `[`"
-   #'(old-#%app fn arg.norm ... ...)])
+(define-syntax #%app
+  (syntax-parser
+    [(app fn arg:arg ...)
+     #:fail-when (equal? #\[ (syntax-property this-syntax 'paren-shape))
+     "function applications can't use `[`"
+     #'(old-#%app fn arg.norm ... ...)]))
 
 (module+ test
   ;; using the new define
