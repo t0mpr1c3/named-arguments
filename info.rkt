@@ -6,3 +6,5 @@
   '("base"
     ))
 
+(define license
+  'MIT)
