@@ -3,8 +3,10 @@
 (define collection 'multi)
 
 (define deps
-  '("base"
-    ))
+  '("base"))
+    
+(define build-deps
+  '("rackunit-lib"))
 
 (define license
   'MIT)
